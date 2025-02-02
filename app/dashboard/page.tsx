@@ -31,20 +31,20 @@ const DashboardPage = () => {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    const fetchChatHistory = async () => {
-      try {
-        const response = await fetch('/api/chat');
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        setChatHistory(data);
-      } catch (error) {
-        console.error('Failed to fetch chat history:', error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchChatHistory = async () => {
+  //     try {
+  //       const response = await fetch('/api/chat');
+  //       const data = await response.json();
+  //       if (!response.ok) throw new Error(data.error);
+  //       setChatHistory(data);
+  //     } catch (error) {
+  //       console.error('Failed to fetch chat history:', error);
+  //     }
+  //   };
 
-    fetchChatHistory();
-  }, []);
+  //   fetchChatHistory();
+  // }, []);
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
@@ -70,25 +70,25 @@ const DashboardPage = () => {
       setResponse(data.response || data.content || '');
 
 
-      const chatResponse = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: input.slice(0, 30) + (input.length > 30 ? '...' : ''),
-          input,
-          response,
-        }),
-      });
+      // const chatResponse = await fetch('/api/chat', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     title: input.slice(0, 30) + (input.length > 30 ? '...' : ''),
+      //     input,
+      //     response,
+      //   }),
+      // });
 
-      if (!chatResponse.ok) {
-        throw new Error('Failed to save chat');
-      }
+      // if (!chatResponse.ok) {
+      //   throw new Error('Failed to save chat');
+      // }
 
-      const newChat = await chatResponse.json();
-      setChatHistory(prev => [newChat, ...prev]);
-      setActiveChat(newChat.id);
+      // const newChat = await chatResponse.json();
+      // setChatHistory(prev => [newChat, ...prev]);
+      // setActiveChat(newChat.id);
 
 
     } catch (error) {
@@ -125,7 +125,6 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       <ChatSidebar
-        // isVisible={isSidebarVisible}
         chats={chatHistory}
         activeChat={activeChat}
         onNewChat={handleNewChat}
