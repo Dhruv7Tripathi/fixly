@@ -1,6 +1,10 @@
 "use client"
 import React, { useState } from 'react';
-import { Link, Search, ArrowRight, Github, Twitter } from 'lucide-react';
+import { Search, ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
+import { useSession } from "next-auth/react";
+import UserAccountNav from "./userAccountNav";
+import SignInButton from "./SignInButton";
+import Link from 'next/link';
 interface ProjectOption {
   title: string;
   href: string;
@@ -9,7 +13,7 @@ interface ProjectOption {
 
 const LandingPage = () => {
   const [textareaFocused, setTextareaFocused] = useState(false);
-
+  const { data: session } = useSession();
   const projectOptions: ProjectOption[] = [
     {
       title: "Start a blog with Astro",
@@ -52,11 +56,17 @@ const LandingPage = () => {
           </div>
           <div className="flex gap-4 items-center">
             <button className="text-gray-400 hover:text-white transition-all hover:scale-105">
-              Sign In
+              {session?.user ? (
+                <UserAccountNav user={session.user} />
+              ) : (
+                <SignInButton text={"Sign In"} />
+              )}
             </button>
-            <button className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-md transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
-              Get Started
-            </button>
+            <Link href='/dashboard'>
+              <button className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-md transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
+                Get Started
+              </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -89,6 +99,8 @@ const LandingPage = () => {
                   <span>to autocomplete</span>
                 </div>
                 <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-all hover:scale-105 text-sm flex items-center gap-2">
+                  {/* {session?.user?(<Link href='/dashboard'> Generate Code</Link >) :(<SignInButton text = {'signin'}/>)} */}
+
                   Generate code
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -121,6 +133,8 @@ const LandingPage = () => {
           </div>
           <div className="flex gap-4">
             <Github className="w-5 h-5 text-gray-500 hover:text-white transition-colors cursor-pointer" />
+            <Linkedin className="w-5 h-5 text-gray-500 hover:text-white transition-colors cursor-pointer" />
+
             <Twitter className="w-5 h-5 text-gray-500 hover:text-white transition-colors cursor-pointer" />
           </div>
         </div>

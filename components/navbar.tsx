@@ -18,7 +18,6 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 w-full bg-white dark:bg-gray-900 bg-opacity-50 backdrop-blur-lg border-b shadow-sm z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-        {/* Logo Section */}
         <div className="text-l font-bold">
           <Link href="/" className="flex items-center">
             <Image src="/logo.webp" alt="logo" className="h-10 w-10 mr-3 rounded-full border border-gray-200" />

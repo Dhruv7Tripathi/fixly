@@ -7,7 +7,7 @@ type Props = { text: string };
 
 const SignInButton = ({ text }: Props) => {
   return (
-    <Button>
+    <Button className="text-gray-400 hover:text-white transition-all hover:scale-105">
       <Link href="/signin">
         {text}
       </Link>

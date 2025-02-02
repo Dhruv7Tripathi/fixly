@@ -1,13 +1,18 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { Send, Copy, Download, Github, Layout, Settings, ArrowRight, Loader2, Code, MessageSquare } from 'lucide-react';
-
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { ChatSidebar } from '@/components/ChatSideBar';
 const DashboardPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [input, setInput] = useState('');
   const [response, setResponse] = useState('');
   const [isCodeResponse, setIsCodeResponse] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [activeChat, setActiveChat] = useState(null);
 
   const detectIfCodeQuery = (text: any) => {
     const codeKeywords = [
@@ -18,6 +23,28 @@ const DashboardPage = () => {
       text.toLowerCase().includes(keyword)
     );
   };
+  const { status } = useSession();
+  const router = useRouter();
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      try {
+        const response = await fetch('/api/chat');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        setChatHistory(data);
+      } catch (error) {
+        console.error('Failed to fetch chat history:', error);
+      }
+    };
+
+    fetchChatHistory();
+  }, []);
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
@@ -41,6 +68,29 @@ const DashboardPage = () => {
 
       setIsCodeResponse(detectIfCodeQuery(input));
       setResponse(data.response || data.content || '');
+
+
+      const chatResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: input.slice(0, 30) + (input.length > 30 ? '...' : ''),
+          input,
+          response,
+        }),
+      });
+
+      if (!chatResponse.ok) {
+        throw new Error('Failed to save chat');
+      }
+
+      const newChat = await chatResponse.json();
+      setChatHistory(prev => [newChat, ...prev]);
+      setActiveChat(newChat.id);
+
+
     } catch (error) {
       console.error('Error:', error);
       if (error instanceof Error) {
@@ -52,7 +102,18 @@ const DashboardPage = () => {
       setIsProcessing(false);
     }
   };
+  const handleNewChat = () => {
+    setActiveChat(null);
+    setInput('');
+    setResponse('');
+  };
 
+  const handleChatSelect = (chat: any) => {
+    setActiveChat(chat.id);
+    setInput(chat.input);
+    setResponse(chat.response);
+    setIsCodeResponse(detectIfCodeQuery(chat.input));
+  };
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(response);
@@ -63,42 +124,16 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Background Effect */}
+      <ChatSidebar
+        // isVisible={isSidebarVisible}
+        chats={chatHistory}
+        activeChat={activeChat}
+        onNewChat={handleNewChat}
+        onSelectChat={handleChatSelect}
+      />
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800/20 via-gray-900/20 to-black"></div>
-
-      {/* Header */}
-      <header className="fixed w-full top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-              fixly.ai
-            </div>
-            <nav className="hidden md:flex gap-4">
-              <button className="text-gray-400 hover:text-white transition-all hover:scale-105 flex items-center gap-2">
-                <Layout className="w-4 h-4" />
-                Dashboard
-              </button>
-              <button className="text-gray-400 hover:text-white transition-all hover:scale-105 flex items-center gap-2">
-                <Github className="w-4 h-4" />
-                Projects
-              </button>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="text-gray-400 hover:text-white transition-all hover:scale-105">
-              <Settings className="w-5 h-5" />
-            </button>
-            <button className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-md transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25">
-              New Project
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="pt-24 px-4 pb-16">
         <div className="max-w-3xl mx-auto">
-          {/* Title Section */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent mb-2">
               AI Assistant
@@ -107,8 +142,6 @@ const DashboardPage = () => {
               Ask questions, get code help, or general assistance.
             </p>
           </div>
-
-          {/* Input Section */}
           <div className="bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden backdrop-blur-sm mb-4">
             <div className="border-b border-gray-700 p-4 flex justify-between items-center">
               <h2 className="text-gray-300 font-medium flex items-center gap-2">
@@ -123,8 +156,6 @@ const DashboardPage = () => {
               className="w-full bg-transparent p-4 outline-none resize-none min-h-[200px] text-gray-300 placeholder-gray-500"
             />
           </div>
-
-          {/* Output Section */}
           <div className="bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden backdrop-blur-sm">
             <div className="border-b border-gray-700 p-4 flex justify-between items-center">
               <h2 className="text-gray-300 font-medium flex items-center gap-2">
@@ -172,8 +203,6 @@ const DashboardPage = () => {
               </div>
             )}
           </div>
-
-          {/* Action Button */}
           <div className="flex justify-center mt-6">
             <button
               onClick={handleSubmit}
